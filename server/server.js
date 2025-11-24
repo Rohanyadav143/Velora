@@ -8,7 +8,7 @@ import { clerkWebhooks } from './controllers/webhooks.js';
 
 // Initialize Sentry
 Sentry.init({
-  dsn: process.env.SENTRY_DSN, // optional, set in Vercel if needed
+  dsn: process.env.SENTRY_DSN, // optional
   tracesSampleRate: 1.0,
 });
 
@@ -27,17 +27,20 @@ try {
 app.use(cors());
 app.use(express.json());
 
-// Sentry request handler
-app.use(Sentry.Handlers.requestHandler());
+// --- Sentry request handler ---
+app.use((req, res, next) => {
+  Sentry.captureMessage("Request received"); // optional
+  next();
+});
 
 // Routes
 app.get('/', (req, res) => res.send("API Working"));
 
-app.get("/debug-sentry", function mainHandler(req, res) {
+app.get("/debug-sentry", (req, res) => {
   throw new Error("My first Sentry error!");
 });
 
-// Clerk Webhook route
+// Clerk webhook
 app.post('/webhooks', (req, res) => {
   const signature = req.headers['clerk-signature'];
   if (signature !== process.env.CLERK_WEBHOOK_SECRET) {
@@ -46,11 +49,13 @@ app.post('/webhooks', (req, res) => {
   clerkWebhooks(req, res);
 });
 
-// Sentry error handler
-app.use(Sentry.Handlers.errorHandler());
+// --- Sentry error handler ---
+app.use((err, req, res, next) => {
+  console.error(err);
+  Sentry.captureException(err);
+  res.status(500).send({ error: err.message });
+});
 
 // Start server
 const PORT = process.env.PORT || 5000;
-app.listen(PORT, () => {
-  console.log(`Server is running on port ${PORT}`);
-});
+app.listen(PORT, () => console.log(`Server running on port ${PORT}`));

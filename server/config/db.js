@@ -6,12 +6,14 @@ const connectDB = async () => {
       `${process.env.MONGODB_URL}/job-portal?retryWrites=true&w=majority`
     );
 
-    mongoose.connection.on('connected', () => console.log("Database Connected"));
-    mongoose.connection.on('error', (err) => console.log("Database Connection Error:", err));
+    console.log("Database Connected");
   } catch (error) {
     console.error("MongoDB connection failed:", error.message);
-    process.exit(1); // Stop the server if DB connection fails
+    process.exit(1); // Stop server if DB connection fails
   }
+
+  // Optional: future error handling
+  mongoose.connection.on("error", (err) => console.log("Database Connection Error:", err));
 };
 
 export default connectDB;
