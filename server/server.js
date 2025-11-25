@@ -6,9 +6,8 @@ import connectDB from './config/db.js';
 import * as Sentry from "@sentry/node";
 import { clerkWebhooks } from './controllers/webhooks.js';
 
-// Initialize Sentry
 Sentry.init({
-  dsn: process.env.SENTRY_DSN, // optional
+  dsn: process.env.SENTRY_DSN,
   tracesSampleRate: 1.0,
 });
 
@@ -25,11 +24,22 @@ try {
 
 // Middlewares
 app.use(cors());
+
+// ❗ MUST BE RAW FOR CLERK WEBHOOKS
+app.post(
+  "/webhooks",
+  express.raw({ type: "application/json" }),
+  (req, res) => {
+    clerkWebhooks(req, res);
+  }
+);
+
+// After webhook: JSON parser
 app.use(express.json());
 
-// --- Sentry request handler ---
+// Sentry test
 app.use((req, res, next) => {
-  Sentry.captureMessage("Request received"); // optional
+  Sentry.captureMessage("Request received");
   next();
 });
 
@@ -40,16 +50,7 @@ app.get("/debug-sentry", (req, res) => {
   throw new Error("My first Sentry error!");
 });
 
-// Clerk webhook
-app.post('/webhooks', (req, res) => {
-  const signature = req.headers['clerk-signature'];
-  if (signature !== process.env.CLERK_WEBHOOK_SECRET) {
-    return res.status(401).send("Unauthorized");
-  }
-  clerkWebhooks(req, res);
-});
-
-// --- Sentry error handler ---
+// Sentry error handler
 app.use((err, req, res, next) => {
   console.error(err);
   Sentry.captureException(err);
