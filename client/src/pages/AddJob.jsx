@@ -3,55 +3,92 @@ import Quill from 'quill'
 import { JobCategories, JobLocations } from '../assets/assets'
 
 const AddJob = () => {
-  const [title,setTitle] = useState('')
-  const [location,setLocation] = useState('Bangalore')
-  const [category,setCategory] = useState('Programming')
-  const [level,setLevel] = useState('Beginner level')
-  const [salary,setSalary] = useState(0)
+  const [title, setTitle] = useState('')
+  const [location, setLocation] = useState('Bangalore')
+  const [category, setCategory] = useState('Programming')
+  const [level, setLevel] = useState('Beginner level')
+  const [salary, setSalary] = useState(0)
   
   const editorRef = useRef(null)
   const quillRef = useRef(null)
 
-  useEffect(()=>{
-    if(!quillRef.current && editorRef.current){
-      quillRef.current = new Quill(editorRef.current,{theme:'snow',})
+  useEffect(() => {
+    if (!quillRef.current && editorRef.current) {
+      quillRef.current = new Quill(editorRef.current, {
+        theme: 'snow',
+        placeholder: 'Enter job description here...',
+        modules: {
+          toolbar: [
+            [{ header: [1, 2, 3, false] }],
+            ['bold', 'italic', 'underline'],
+            [{ list: 'ordered' }, { list: 'bullet' }],
+            ['link', 'image'],
+            ['clean']
+          ]
+        }
+      })
     }
-  },[])
+  }, [])
 
   return (
-    <form className='conatiner p-5 flex flex-col w-full items-start gap-5'>
+    <form className='container max-w-4xl mx-auto p-6 sm:p-10 bg-white flex flex-col gap-6'>
+      
+      <h2 className='text-2xl font-semibold text-gray-800 mb-4'>Add a New Job</h2>
+
+      {/* Job Title */}
       <div className='w-full'>
-        <p className='mb-2'>Job Title</p>
-        <input type="text" placeholder='Type Here' onChange={e => setTitle(e.target.value)} value={title} required className='w-full max-w-lg px-3 py-2 border-2 border-gray-300 rounded'></input>
+        <label className='mb-2 text-gray-700 block'>Job Title</label>
+        <input 
+          type="text" 
+          placeholder='Type Here' 
+          onChange={e => setTitle(e.target.value)} 
+          value={title} 
+          required 
+          className='w-full px-4 py-2 border-2 border-gray-300 rounded-lg focus:border-indigo-500 focus:ring-1 focus:ring-indigo-300 transition'
+        />
       </div>
 
-      <div className='w-full max-w-lg'>
-        <p className='my-2'>Job Description</p>
-        <div ref={editorRef}></div>
+      {/* Job Description */}
+      <div className='w-full'>
+        <label className='mb-2 text-gray-700 block'>Job Description</label>
+        <div ref={editorRef} className='border-2 border-gray-300 rounded-lg h-40 sm:h-60'></div>
       </div>
 
-      <div className='flex flex-col sm:flex-row gap-2 w-full sm:gap-8'>
-        <div>
-          <p className='mb-2 ml-1'>Job Category</p>
-          <select className='w-full px-3 py-2 border-2 border-gray-300 rounded' onChange={e=>setCategory(e.target.value)}>
-            {JobCategories.map((category,index)=>
-              <option key={index} value={category}>{category}</option>
-            )}
+      {/* Category, Location, Level */}
+      <div className='flex flex-col sm:flex-row gap-4 w-full'>
+        <div className='flex-1'>
+          <label className='mb-2 text-gray-700 block'>Job Category</label>
+          <select 
+            className='w-full px-4 py-2 border-2 border-gray-300 rounded-lg focus:border-indigo-500 focus:ring-1 focus:ring-indigo-300 transition'
+            onChange={e => setCategory(e.target.value)}
+            value={category}
+          >
+            {JobCategories.map((cat, index) => (
+              <option key={index} value={cat}>{cat}</option>
+            ))}
           </select>
         </div>
 
-        <div>
-          <p className='mb-2 ml-1'>Job Location</p>
-          <select className='w-full px-3 py-2 border-2 border-gray-300 rounded' onChange={e=>setLocation(e.target.value)}>
-            {JobLocations.map((location,index)=>
-              <option key={index} value={location}>{location}</option>
-            )}
+        <div className='flex-1'>
+          <label className='mb-2 text-gray-700 block'>Job Location</label>
+          <select 
+            className='w-full px-4 py-2 border-2 border-gray-300 rounded-lg focus:border-indigo-500 focus:ring-1 focus:ring-indigo-300 transition'
+            onChange={e => setLocation(e.target.value)}
+            value={location}
+          >
+            {JobLocations.map((loc, index) => (
+              <option key={index} value={loc}>{loc}</option>
+            ))}
           </select>
         </div>
 
-        <div>
-          <p className='mb-2 ml-1'>Job Level</p>
-          <select className='w-full px-3 py-2 border-2 border-gray-300 rounded' onChange={e=>setLevel(e.target.value)}>
+        <div className='flex-1'>
+          <label className='mb-2 text-gray-700 block'>Job Level</label>
+          <select 
+            className='w-full px-4 py-2 border-2 border-gray-300 rounded-lg focus:border-indigo-500 focus:ring-1 focus:ring-indigo-300 transition'
+            onChange={e => setLevel(e.target.value)}
+            value={level}
+          >
             <option value="Beginner level">Beginner level</option>
             <option value="Intermediate level">Intermediate level</option>
             <option value="Senior level">Senior level</option>
@@ -59,11 +96,26 @@ const AddJob = () => {
         </div>
       </div>
 
-      <div>
-        <p className='mb-2'>Job Salary</p>
-        <input min={0} className='w-full px-3 py-2 border-2 border-gray-300 rounded sm:w-[120px]' onChange={e=> setSalary(e.target.value)} type="Number" placeholder='2500' />
+      {/* Salary */}
+      <div className='w-full sm:w-1/3'>
+        <label className='mb-2 text-gray-700 block'>Job Salary</label>
+        <input 
+          type="number" 
+          min={0} 
+          placeholder='2500' 
+          value={salary} 
+          onChange={e => setSalary(e.target.value)}
+          className='w-full px-4 py-2 border-2 border-gray-300 rounded-lg focus:border-indigo-500 focus:ring-1 focus:ring-indigo-300 transition'
+        />
       </div>
-      <button className='w-28 py-3 mt-4 bg-black text-white rounded'>ADD</button>
+
+      {/* Submit Button */}
+      <button 
+        type='submit' 
+        className='bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-2 rounded-lg shadow-md transition-all w-32'
+      >
+        ADD
+      </button>
     </form>
   )
 }
