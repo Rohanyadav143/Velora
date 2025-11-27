@@ -1,10 +1,15 @@
-import './config/instrument.js';
-import express from 'express';
-import cors from 'cors';
-import 'dotenv/config';
-import connectDB from './config/db.js';
+import "./config/instrument.js";
+import express from "express";
+import cors from "cors";
+import "dotenv/config";
+import connectDB from "./config/db.js";
 import * as Sentry from "@sentry/node";
-import { clerkWebhooks } from './controllers/webhooks.js';
+import { clerkWebhooks } from "./controllers/webhooks.js";
+import companyRoutes from "./routes/companyRoutes.js";
+import connectCloudinary from "./config/cloudinary.js";
+import jobRoutes from './routes/jobRoutes.js'
+import userRoutes from './routes/userRoutes.js'
+import {clerkMiddleware} from '@clerk/express'
 
 Sentry.init({
   dsn: process.env.SENTRY_DSN,
@@ -22,20 +27,24 @@ try {
   process.exit(1);
 }
 
+await connectCloudinary();
+
 // Middlewares
 app.use(cors());
 
 // ❗ MUST BE RAW FOR CLERK WEBHOOKS
-app.post(
-  "/webhooks",
-  express.raw({ type: "application/json" }),
-  (req, res) => {
-    clerkWebhooks(req, res);
-  }
-);
+app.post("/webhooks", express.raw({ type: "application/json" }), (req, res) => {
+  clerkWebhooks(req, res);
+});
 
-// After webhook: JSON parser
 app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
+app.use(clerkMiddleware())
+
+app.use("/api/company", companyRoutes);
+app.use('/api/jobs',jobRoutes)
+
+app.use('/api/users',userRoutes)
 
 // Sentry test
 app.use((req, res, next) => {
@@ -44,7 +53,7 @@ app.use((req, res, next) => {
 });
 
 // Routes
-app.get('/', (req, res) => res.send("API Working"));
+app.get("/", (req, res) => res.send("API Working"));
 
 app.get("/debug-sentry", (req, res) => {
   throw new Error("My first Sentry error!");
