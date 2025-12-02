@@ -220,7 +220,7 @@ export const jobsData = [
         salary: 72000,
         date: 1729681667114,
         category: "Data Science",
-    },
+    },  
     {
         _id: '3',
         title: "UI/UX Designer",

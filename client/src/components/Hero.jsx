@@ -22,7 +22,7 @@ const Hero = () => {
       {/* HERO BANNER */}
       <div className="bg-gradient-to-r from-indigo-700 via-indigo-800 to-blue-900 text-white py-16 text-center mx-2 rounded-2xl shadow-lg">
         <h2 className="text-2xl md:text-3xl lg:text-4xl font-semibold mb-4">
-          Over 10,000+ Jobs Awaiting Your Application
+          Over 1000+ Jobs Awaiting Your Application
         </h2>
 
         <p className="mb-8 max-w-xl mx-auto text-sm font-light px-6">

@@ -3,6 +3,7 @@ import Company from "../models/Company.js";
 import { v2 as cloudinary} from 'cloudinary';
 import generateToken from '../utils/generateToken.js';
 import Job from '../models/Job.js';
+import JobApplication from '../models/JobApplication.js';
 
 // Register a new company
 export const registerCompany = async(req,res) =>{
@@ -87,17 +88,17 @@ export const loginCompany = async (req, res) => {
 };
 
 // Get company data
-export const getCompanyData = async(req,res)=>{
+export const getCompanyData = async (req, res) => {
+  try {
+    const companyId = req.company._id; // <-- FIX
 
-    try{
-        const company = req.company
-        res.json({success:true, company})
-    }
-    catch(error){
-        res.json({success:false, message:error.message})
-    }
+    const company = await Company.findById(companyId).select("-password");
 
-}
+    res.json({ success: true, data: company });
+  } catch (err) {
+    res.json({ success: false, message: err.message });
+  }
+};
 
 // post a new job
 export const postJob = async(req,res)=>{
@@ -141,9 +142,14 @@ export const getCompanyPostedJob = async(req,res)=>{
 
         const jobs = await Job.find({companyId})
 
-        //(ToDo) Adding Number of applicants info in data 
+        //Adding Number of applicants info in data 
+        const jobsData = await Promise.all(jobs.map(async (job) => {
+            const applicants = await JobApplication.find({jobId:job._id});
+            return{...job.toObject(),applicants:applicants.length}
+        }))
+
         
-        res.json({success:true, jobsData: jobs})
+        res.json({success:true, jobsData})
     
     }
     catch(error){

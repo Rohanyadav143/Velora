@@ -1,19 +1,14 @@
 import express from 'express'
-import { applyForJob, getUserData, getUserJobApplications, updateUserResume } from '../controllers/userController.js'
+import {applyForJob, getUserData, getUserJobApplications, updateUserResume} from '../controllers/userController.js'
 import upload from '../config/multer.js'
+import { protectUser } from '../middlewares/authMiddleware.js'
 
 const router = express.Router()
 
-// Get user data
-router.get('/user',getUserData)
+// PROTECTED ROUTES
+router.get('/user', protectUser, getUserData);
+router.post('/apply', protectUser, applyForJob);
+router.get('/applications', protectUser, getUserJobApplications);
+router.post('/update-resume', protectUser, upload.single('resume'), updateUserResume);
 
-// Apply for a job
-router.post('/apply',applyForJob)
-
-// Get applied jobs data
-router.get('/applications',getUserJobApplications)
-
-// Update user profile (Resume)
-router.post('/update-resume',upload.single('resume'),updateUserResume)
-
-export default router;
+export default router
