@@ -1,5 +1,10 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { assets, viewApplicationsPageData } from '../assets/assets';
+import { useContext } from 'react';
+import {AppContext} from '../context/AppContext'
+import axios from 'axios';
+import { toast } from 'react-toastify';
+import Loading from '../components/Loading';
 
 const ViewApplications = () => {
 
@@ -18,7 +23,62 @@ const ViewApplications = () => {
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
-  return (
+  const {backendUrl, companyToken} = useContext(AppContext)
+  const [applicants, setApplicants] = useState(null)
+
+  // Function to fetch company job Applications data
+  const fetchCompanyJobApplications = async () =>{
+    try{
+      const {data} = await axios.get(backendUrl+'/api/company/applicants',
+        {headers:{token:companyToken}})
+      if(data.success){
+        setApplicants(data.applications.reverse())
+      }
+      else{
+        toast.error(data.message)
+      }
+    }
+    catch(error){
+      toast.error(error.message)
+    }
+  }
+
+  // Function to update job Application status
+  const changeJobApplicationStatus = async (id, status) => {
+    try {
+      const { data } = await axios.post(
+        backendUrl + '/api/company/change-status',
+        { id, status },
+        { headers: { token: companyToken } }
+      );
+
+      if (data.success) {
+        fetchCompanyJobApplications(); // refresh the table with updated status
+      } else {
+        toast.error(data.message);
+      }
+    } catch (error) {
+      toast.error(error.message);
+    }
+  };
+
+  useEffect(() => {
+    if (companyToken) {
+      fetchCompanyJobApplications();
+    }
+  }, [companyToken]);
+
+  if (applicants === null) {
+    return <Loading />;
+  }
+
+  if (applicants.length === 0) {
+      return <div className='flex items-center justify-center h-[70vh]'>
+        <p className='text-xl sm:text-2xl'>No Applications Found</p>
+      </div>
+  }
+
+  return(
     <div className="container mx-auto p-6">
       <div className="overflow-x-auto rounded-lg shadow-sm">
         <table className="min-w-full bg-white border border-gray-200 text-gray-700">
@@ -34,7 +94,7 @@ const ViewApplications = () => {
           </thead>
 
           <tbody>
-            {viewApplicationsPageData.map((applicant, index) => (
+            {applicants.filter(item => item.jobId && item.userId).map((applicant, index) => (
               <tr key={index} className="hover:bg-gray-50 transition">
 
                 <td className="py-3 px-4 border-b max-md:hidden">{index + 1}</td>
@@ -42,18 +102,18 @@ const ViewApplications = () => {
                 <td className="py-3 px-4 border-b flex items-center gap-3">
                   <img
                     className="w-10 h-10 rounded-full max-sm:hidden"
-                    src={applicant.imgSrc}
+                    src={applicant.userId.image}
                     alt={applicant.name}
                   />
-                  {applicant.name}
+                  {applicant.userId.name}
                 </td>
 
-                <td className="py-3 px-4 border-b max-sm:hidden">{applicant.jobTitle}</td>
-                <td className="py-3 px-4 border-b max-md:hidden">{applicant.location}</td>
+                <td className="py-3 px-4 border-b max-sm:hidden">{applicant.jobId.title}</td>
+                <td className="py-3 px-4 border-b max-md:hidden">{applicant.jobId.location}</td>
 
                 <td className="py-3 px-4 border-b">
                   <a
-                    href={applicant.resumeLink}
+                    href={applicant.userId.resume}
                     target="_blank"
                     className="bg-blue-50 text-blue-500 px-3 py-1 rounded inline-flex items-center gap-2 hover:bg-blue-100"
                   >
@@ -64,6 +124,8 @@ const ViewApplications = () => {
 
                 {/* CLICK DROPDOWN */}
                 <td className="py-3 px-4 border-b">
+                  {applicant.status === "Pending"
+                  ?
                   <div className="relative" ref={el => dropdownRefs.current[index] = el}>
                     <button
                       className="px-3 py-1 text-gray-500 font-bold hover:bg-gray-100 rounded"
@@ -76,15 +138,17 @@ const ViewApplications = () => {
 
                     {openDropdown === index && (
                       <div className="absolute right-0 top-full mt-1 w-32 bg-white border rounded shadow-lg z-50 pointer-events-auto">
-                        <button className="block w-full text-left px-4 py-2 text-green-600 hover:bg-gray-100">
+                        <button onClick={()=>changeJobApplicationStatus(applicant._id,'Accepted')} className="block w-full text-left px-4 py-2 text-green-600 hover:bg-gray-100">
                           Accept
                         </button>
-                        <button className="block w-full text-left px-4 py-2 text-red-600 hover:bg-gray-100">
+                        <button onClick={()=>changeJobApplicationStatus(applicant._id,'Rejected')} className="block w-full text-left px-4 py-2 text-red-600 hover:bg-gray-100">
                           Reject
                         </button>
                       </div>
                     )}
-                  </div>
+                  </div>:
+                  <div>{applicant.status}</div>
+                  }
                 </td>
 
               </tr>
@@ -93,7 +157,7 @@ const ViewApplications = () => {
         </table>
       </div>
     </div>
-  );
+  )
 };
 
 export default ViewApplications;

@@ -4,6 +4,7 @@ import { v2 as cloudinary} from 'cloudinary';
 import generateToken from '../utils/generateToken.js';
 import Job from '../models/Job.js';
 import JobApplication from '../models/JobApplication.js';
+import { verifyToken } from "@clerk/backend";
 
 // Register a new company
 export const registerCompany = async(req,res) =>{
@@ -130,9 +131,26 @@ export const postJob = async(req,res)=>{
 }
 
 // Get company job applications
-export const getCompanyJobApplicants = async(req,res) =>{
+export const getCompanyJobApplicants = async (req, res) => {
+  try {
 
-}
+    const applications = await JobApplication.find({
+      companyId: req.company._id,
+    })
+      .populate("userId", "name email image resume")
+      .populate("jobId", "title location category salary level")
+      .exec();
+
+    res.json({
+      success: true,
+      applications,
+    });
+  } catch (error) {
+    console.error("Error fetching applicants:", error);
+    res.json({ success: false, message: error.message });
+  }
+};
+
 
 // Get company posted job
 export const getCompanyPostedJob = async(req,res)=>{
@@ -158,9 +176,31 @@ export const getCompanyPostedJob = async(req,res)=>{
 }
 
 // Change job application status
-export const changeJobApplicationsStatus = async(req,res)=>{
+export const changeJobApplicationsStatus = async (req, res) => {
+  try {
+    const { id, status } = req.body;
 
-}
+    if (!id || !status) {
+      return res.json({ success: false, message: "Missing id or status" });
+    }
+
+    const updated = await JobApplication.findOneAndUpdate(
+      { _id: id },
+      { status },
+      { new: true }
+    )
+      .populate("userId", "name email image resume")
+      .populate("jobId", "title location");
+
+    if (!updated) {
+      return res.json({ success: false, message: "Application not found" });
+    }
+
+    return res.json({ success: true, message: "Status changed", application: updated });
+  } catch (error) {
+    return res.json({ success: false, message: error.message });
+  }
+};
 
 // Change job visiblity
 export const changeVisiblity = async(req,res)=>{

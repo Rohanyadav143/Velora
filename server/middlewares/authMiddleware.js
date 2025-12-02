@@ -14,11 +14,15 @@ export const protectCompany = async (req, res, next) => {
   try {
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
 
-    req.company = await Company.findById(decoded.id).select("-password");
+    req.company = await Company.findById(decoded.id);
+
+    if (!req.company) {
+      return res.json({ success: false, message: "Company not found" });
+    }
 
     next();
   } catch (error) {
-    res.json({ success: false, message: error.message });
+    res.json({ success: false, message: "Invalid token" });
   }
 };
 

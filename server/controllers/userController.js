@@ -1,7 +1,6 @@
 import User from "../models/User.js";
 import Job from "../models/Job.js";
 import JobApplication from "../models/JobApplication.js";
-import Application from "../models/JobApplication.js";
 import { v2 as cloudinary } from "cloudinary";
 
 // =============================
@@ -57,13 +56,11 @@ export const applyForJob = async (req, res) => {
 
   try {
     const isAlreadyApplied = await JobApplication.findOne({ jobId, userId });
-
     if (isAlreadyApplied) {
-      return res.json({ success: true, message: "Already Applied" });
+      return res.json({ success: false, message: "Already Applied" });
     }
 
     const jobData = await Job.findById(jobId);
-
     if (!jobData) {
       return res.json({ success: false, message: "Job not found" });
     }
@@ -80,6 +77,7 @@ export const applyForJob = async (req, res) => {
     res.json({ success: false, message: error.message });
   }
 };
+
 
 // =============================
 // ✅ UPDATE RESUME

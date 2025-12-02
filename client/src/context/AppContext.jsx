@@ -83,6 +83,24 @@ export const AppContextProvider = (props) => {
     }
   };
 
+  // Get user applied applications data
+  const fetchUserApplications = async () => {
+    try{
+      const token = await getToken()
+      const {data} = await axios.get(backendUrl+'/api/users/applications',
+        {headers:{Authorization:`Bearer ${token}`}}
+      )
+      if(data.success){
+        setUserApplications(data.applications)
+      }else{
+        toast.error(data.message)
+      }
+    }
+    catch(error){
+      toast.error(error.message)
+    }
+  }
+
   // Load jobs on first render
   useEffect(() => {
     fetchJobs();
@@ -97,12 +115,15 @@ export const AppContextProvider = (props) => {
 
   // Fetch user data when Clerk user is available
   useEffect(() => {
-    if (user) fetchUserData();
+    if (user) {
+      fetchUserData();
+      fetchUserApplications()
+    }
   }, [user]);
 
   const value = { searchFilter, setSearchFilter, isSearched, setIsSearched, jobs, setJobs,
     showRecruiterLogin,setShowRecruiterLogin,companyToken,setCompanyToken,companyData,setCompanyData,
-    userData,setUserData,userApplications,setUserApplications,backendUrl,
+    userData,setUserData,userApplications,setUserApplications,backendUrl,fetchUserData,fetchUserApplications
   };
 
   return (
